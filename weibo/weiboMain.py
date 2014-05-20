@@ -28,8 +28,8 @@ if __name__ == '__main__':
         print x, COPYRIGHT[x]
     WBLogin = weiboLogin.weiboLogin()
     if WBLogin.login(config) == 1:
-        print 'Login success!'
+        print 'Login success! <@weiboMain>'
     else:
-        print 'Login error!'
+        print 'Login error! <@weiboMain>'
         exit()
 
