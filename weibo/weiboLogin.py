@@ -1,0 +1,129 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+import urllib2
+import urllib
+import cookielib
+import base64
+import re
+import json
+import hashlib
+import rsa
+import binascii
+
+class weiboLogin:
+    cj = cookielib.LWPCookieJar()
+    cookie_support = urllib2.HTTPCookieProcessor(cj)
+    opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)
+    post_data = {
+            'entry': 'weibo',
+            'gateway': '1',
+            'form': '',
+            'savestate': '7',
+            'userticket': '1',
+            'ssosimplelogin': '1',
+            'vsnf': '1',
+            'vsnval': '',
+            'su': '',
+            'service': 'miniblog',
+            'servertime': '',
+            'nonce': '',
+            'pwencode': 'rsa2',
+            'sp': '',
+            'encoding': 'UTF-8',
+            'prelt': '115',
+            'rsakv': '',
+            'url': 'http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack',
+            'returntype': 'META'
+    }
+
+    def get_servertime(self, username):
+        url =
+        'http://login.sina.com.cn/sso/prelogin.php?entry=sso&callback=sinaSSOController.preloginCallBack&su=%s&rsakt=mod&client=ssologin.js(v1.4.4)'
+        % username
+        data = urllib2.urlopen(url).read()
+        p = re.complice('\((.*)\)')
+        try:
+            json_data = p.search(data).group(1)
+            data = json.loads(json_data)
+            servertime = str(data['servertime'])
+            nonce = data['nonce']
+            pubkey = data['pubkey']
+            rsakv = data['rsakv']
+            return servertime, nonce, pubkey, rsakv
+        except:
+            print 'Get servertime error!'
+            return None
+
+    ## @func get_pwd
+    ## @brief
+    def get_pwd(self, password, servertime, nonce, pubkey):
+        rsa_pubkey = int(pubkey, 16)
+        key = rsa.PublicKey(rsa_pubkey, 65537)  # create public key
+        msg = str(servertime) + '\t' + str(nonce) + '\n' + str(password) # 
+        passwd = rsa.encrypt(msg, key) # encrypt
+        passwd = binascii.b2a_hex(passwd) # encrypt to hex
+        return passwd
+
+    def get_user(self, username):
+        username_ urllib.quote(username)
+        username = base64.encodestring(username_)[:-1]
+        return username
+
+    ## @func get_account
+    def get_account(self, config):
+        fd = file(config)
+        flag = 0
+        for line in fd:
+            if flag == 0:
+                username = line.strip()
+                flag += 1
+            else:
+                pwd = line.strip()
+        fd.close()
+        return username, pwd
+
+    ## @func login
+    ## @brief
+    def login(self, config):
+        username, pwd = self.get_account(config)
+
+        url =
+        'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.4)'
+        try:
+            servertime, nonce, pubkey, rsakv = self.getservertime(username)
+            print servertime
+            print nonce
+            print pubkey
+            print rsakv
+        except:
+            print 'get servertime error!'
+            return
+
+        weiboLogin.post_data['servertime'] = servertime
+        weiboLogin.post_data['nonce'] = nonce
+        weiboLogin.post_data['rsakv'] = rsakv
+        weiboLogin.post_data['su'] = self.get_user(username)
+        weiboLgoin.post_data['sp'] = self.get_pwd(pwd, servertime, nonce, pubkey)
+
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        req = urllib2.Request(
+                url = url,
+                data = weiboLogin.post_data,
+                headers = headers
+        )
+        res = urllib2.urlopen(req)
+        html = res.read()
+        print html
+
+        p = re.compile('location\.replace\(\"(.*)\"\)')
+        try:
+            login_url = p.search(html).group(1)
+            print login_url
+            urllib2.urlopen(login_url)
+            print "Login success!"
+            return 1
+        except:
+            print 'Login error!'
+            return 0
