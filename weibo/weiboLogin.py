@@ -16,6 +16,7 @@ class weiboLogin:
     cj = cookielib.LWPCookieJar()
     cookie_support = urllib2.HTTPCookieProcessor(cj)
     opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)
+    urllib2.install_opener(opener)
     post_data = {
             'entry': 'weibo',
             'gateway': '1',
@@ -75,8 +76,8 @@ class weiboLogin:
         return username
 
     ## @func get_account
-    def get_account(self, config):
-        fd = file(config)
+    def get_account(self, account):
+        fd = file(account)
         flag = 0
         for line in fd:
             if flag == 0:
@@ -101,8 +102,8 @@ class weiboLogin:
 
     ## @func login
     ## @brief
-    def login(self, config):
-        username, pwd = self.get_account(config)
+    def login(self, account):
+        username, pwd = self.get_account(account)
         print username
 
         url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.4)'
@@ -134,7 +135,7 @@ class weiboLogin:
         #u_html = html.decode("utf-8")
         print html
 
-        p = re.compile('location\.replace\(\"(.*)\"\)')
+        p = re.compile('location\.replace\([\"|\'](.*)[\"|\']\)')
         try:
             login_url = p.search(html).group(1)
             # if retcode=4049, need to enter checkcode
