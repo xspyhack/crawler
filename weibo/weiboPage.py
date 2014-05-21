@@ -75,7 +75,7 @@ class weiboPage:
         self.writefile('./output/html_3', html)
         self.writefile('./output/result_3', eval(u"'''" + html + "'''"))
 
-    ## func get url
+    ## @func get url
     ## @brief
     def get_url(self, uid):
         url = 'http://weibo.com/' + uid + '?frome=otherprofile&wvr=5&loc=tagweibo'
@@ -90,7 +90,7 @@ class weiboPage:
             print line
             time.sleep(1)
 
-    ##
+    ## @func writefile
     ##
     def writefile(self, filename, content):
         fd = file(filename, 'w')
