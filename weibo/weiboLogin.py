@@ -11,6 +11,7 @@ import json
 import hashlib
 import rsa
 import binascii
+import weiboMain
 
 class weiboLogin:
     cj = cookielib.LWPCookieJar()
@@ -57,7 +58,7 @@ class weiboLogin:
             rsakv = data['rsakv']
             return servertime, nonce, pubkey, rsakv
         except:
-            print 'Get servertime error! <@weiboLogin.get_servertime>'
+            weiboMain.log.critical('++++Get servertime error! <@weiboLogin.get_servertime>++++')
             return None
 
     ## @func get_pwd
@@ -104,7 +105,7 @@ class weiboLogin:
     ## @brief
     def login(self, account):
         username, pwd = self.get_account(account)
-        print username
+        print '>>>>account: ' + username
 
         url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.4)'
         try:
@@ -114,8 +115,8 @@ class weiboLogin:
             #print pubkey
             #print rsakv
         except:
-            print 'Get servertime error! <@weiboLogin.login>'
-            return
+            weiboMain.log.error('++++Get servertime error! <@weiboLogin.login>++++')
+            return 0
 
         weiboLogin.post_data['servertime'] = servertime
         weiboLogin.post_data['nonce'] = nonce
@@ -133,7 +134,7 @@ class weiboLogin:
         res = urllib2.urlopen(req)
         html = res.read()
         #u_html = html.decode("utf-8")
-        print html
+        #print html
 
         p = re.compile('location\.replace\([\"|\'](.*)[\"|\']\)')
         try:
@@ -141,17 +142,18 @@ class weiboLogin:
             # if retcode=4049, need to enter checkcode
             # if retcode=101, pwd error
             # if retcode=0, login success
-            print login_url
+            #print login_url
             retcode = self.check_retcode(login_url)
             if retcode == 0:
                 urllib2.urlopen(login_url)
                 return 1
             elif retcode == 2:
-                print 'Login error! (error: 4049, check code!) <@weiboLogin.login>'
+                weiboMain.log.critical('++++Login error! (error: 4049, need check code!) <@weiboLogin.login>++++')
             elif retcode == 1:
-                print 'Login error! (error: 101, username or password error!) <@weiboLogin.login>'
+                weiboMain.log.critical('++++Login error! (error: 101, username or password error!) <@weiboLogin.login>++++')
             else:
-                print 'Login error! (unknow error!) <@weiboLogin.login>'
+                weiboMain.log.critical('++++Login error! (unknow error!) <@weiboLogin.login>++++')
             return 0
-        except:
+        except Exception as e:
+            weiboMain.log.critical('++++Except! <weiboLogin.login>++++')
             return 0
