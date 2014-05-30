@@ -250,7 +250,7 @@ class WBUserParser():
                     for weibo in weibo_list.find_all(attrs = {'class': 'WB_feed_type'}):
                         wb_text = weibo.find(attrs = {'class': 'WB_text'}).text.strip()
                         if wb_text is not None:
-                            self.user_info.weibo.append(wb_text.replace('\\', '').replace('@', 'At:'))
+                            self.user_info.weibo.append(wb_text.replace('\\', '').replace('@', 'At:').replace('\'', ''))
                             weiboMain.log.info(wb_text)
 
     ##@func get_page_count
