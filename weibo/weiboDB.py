@@ -18,12 +18,12 @@ class weiboDB():
             regday date,\
             email char(32),\
             qq char(16),\
-            edu varchar(64),\
-            career varchar(64),\
-            tags varchar(64),\
+            edu varchar(200),\
+            career varchar(128),\
+            tags varchar(200),\
             fans integer,\
             follows integer,\
-            weibo varchar(15000))'
+            weibo varchar(35000))'
         self.cur.execute(sql)
         self.conn.commit()
 
