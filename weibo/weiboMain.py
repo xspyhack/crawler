@@ -18,10 +18,13 @@ from works import ThreadPool
 from works import do_job
 import urllib2
 import urllib
+import cookielib
 import time
 import logging.config
 from bloomfilter import bloomfilter
+import socket
 
+socket.setdefaulttimeout(10)
 COPYRIGHT = {
         '>>>>SOFTWARE': '@weibo crawler',
         '>>>>AUTHOR': '@author: xspyhack@gmail.com',
@@ -38,6 +41,12 @@ if __name__ == '__main__':
         print x, COPYRIGHT[x]
     #logging.config.fileConfig("./config/logging.conf")
     #log = logging.getLogger('logger_weibo')
+
+    cj = cookielib.LWPCookieJar()
+    cookie_support = urllib2.HTTPCookieProcessor(cj)
+    opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)
+    urllib2.install_opener(opener)
+
     WBLogin = weiboLogin.weiboLogin()
     if WBLogin.login(ACCOUNT) == 1:
         print '****Login success! <@weiboMain>****'
@@ -64,10 +73,11 @@ if __name__ == '__main__':
     follow_url = 'follow?relate=follow'
     fans_url = 'follow?relate=fans'
     follow_page_count = WBUser.get_page_count(follow_url)
-    if follow_page_count is not None:
-        #print '>>>>follow page count: ' + str(follow_page_count)
+    if follow_page_count is not None and follow_page_count != 0:
+        print '>>>>follow page count: ' + str(follow_page_count)
         for i in range(1, follow_page_count + 1):
-            WBUser.get_list(follow_url, i)
+            if WBUser.get_list(follow_url, i) == -1:
+                break
         wbDB = weiboDB.weiboDB('uid.db')
         #wbDB.create_uid_table()
         for i in WBUser.follow_uid:

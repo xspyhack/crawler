@@ -41,7 +41,7 @@ class weiboDB():
     def query(self, sql):
         if sql != '':
             self.cur.execute(sql)
-            print 'return'
+            #print 'return'
             res = self.cur.fetchone()
             if res is not None:
                 return res[0]

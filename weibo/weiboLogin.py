@@ -4,7 +4,6 @@
 import sys
 import urllib2
 import urllib
-import cookielib
 import base64
 import re
 import json
@@ -14,10 +13,10 @@ import binascii
 import weiboMain
 
 class weiboLogin:
-    cj = cookielib.LWPCookieJar()
-    cookie_support = urllib2.HTTPCookieProcessor(cj)
-    opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)
-    urllib2.install_opener(opener)
+    #cj = cookielib.LWPCookieJar()
+    #cookie_support = urllib2.HTTPCookieProcessor(cj)
+    #opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)
+    #urllib2.install_opener(opener)
     post_data = {
             'entry': 'weibo',
             'gateway': '1',
