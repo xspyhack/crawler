@@ -18,6 +18,7 @@ class WBUserParser():
     def __init__(self, uid):
         self.uid = uid
         self.url = 'http://weibo.com/p/100505%s/' % uid 
+        self.headers = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:29.0) Gecko/20100101 Firefox/29.0'
         self.user_info = models.UserInfo()
         self.page_count = 0
         self.follow_uid = []
@@ -42,14 +43,18 @@ class WBUserParser():
     ## @brief get user info which is public to every one
     def get_user_profile(self):
         weiboMain.log.info('****@func get_user_profile****')
-        info_url = self.url + 'info'  # this is user info url
+        info_url = self.url# + 'info'  # this is user info url
         try:
-            res = urllib2.urlopen(info_url)
-        except:
-            weiboMain.log.error('++++Open url [%s] failed. <@parser.get_user_profile>++++' % info_url)
+            req = urllib2.Request(info_url)
+            req.add_header('User-Agent', self.headers)
+            res = urllib2.urlopen(req)
+            html = res.read()
+        except urllib2.HTTPError, e:
+            weiboMain.log.error('++++Open url [%s] failed. (Error code: %d) <@parser.get_user_profile>++++' % (info_url, e.code))
             return 0
         #res = urllib2.urlopen(info_url)
-        soup = beautiful_soup(res.read())  # use bs4 to parser xml
+        #weiboMain.log.info(html)
+        soup = beautiful_soup(html)  # use bs4 to parser xml
         if soup is None:
             return 0
 
@@ -217,9 +222,11 @@ class WBUserParser():
 
         try:
             #print page_url
-            res = urllib2.urlopen(page_url)
-        except:
-            weiboMain.log.error('++++Open url [%s] failed. <@parser.get_weibo>++++' % page_url)
+            req = urllib2.Request(page_url)
+            req.add_header('User-Agent', self.headers)
+            res = urllib2.urlopen(req)
+        except urllib2.HTTPError, e:
+            weiboMain.log.error('++++Open url [%s] failed. (Error code: %d) <@parser.get_weibo>++++' % (page_url, e.code))
             return
         soup = beautiful_soup(res.read())
         if soup is None:
@@ -243,7 +250,7 @@ class WBUserParser():
                     for weibo in weibo_list.find_all(attrs = {'class': 'WB_feed_type'}):
                         wb_text = weibo.find(attrs = {'class': 'WB_text'}).text.strip()
                         if wb_text is not None:
-                            self.user_info.weibo.append(wb_text)
+                            self.user_info.weibo.append(wb_text.replace('\\', '').replace('@', 'At:'))
                             weiboMain.log.info(wb_text)
 
     ##@func get_page_count
@@ -251,14 +258,17 @@ class WBUserParser():
         weiboMain.log.info('****@func get_follow_or_fans_page_count>****')
         page_url = self.url + url
         try:
-            res = urllib2.urlopen(page_url)
-        except:
-            weiboMain.log.error('++++Open url [%s] failed. <@parser.get_page_count>++++' % page_url)
+            req = urllib2.Request(page_url)
+            req.add_header('User-Agent', self.headers)
+            res = urllib2.urlopen(req)
+        except urllib2.HTTPError, e:
+            weiboMain.log.error('++++Open url [%s] failed. (Error code: %d) <@parser.get_page_count>++++' % (page_url, e.code))
             return
         #res = urllib2.urlopen(page_url)
         soup = beautiful_soup(res.read())
         if soup is None:
-            return 0
+            weiboMain.log.error('++++Read html failed! <@parser.get_page_count>++++')
+            return
 
         count = 0
         for script in soup.find_all('script'):
@@ -271,7 +281,8 @@ class WBUserParser():
                     page_soup = beautiful_soup(data['html'])
                     pages = page_soup.find('div', attrs = {'class': 'W_pages'})
                     if pages is None:
-                        return 0
+                        weiboMain.log.error('++++Find div W-pages failed! <parser.get_page_count>++++')
+                        continue
                     for page in pages.find_all('a', attrs = {'class': 'S_bg1'}):
                         p = re.compile('page=(.*?)#place')
                         #print page['href']
@@ -279,8 +290,9 @@ class WBUserParser():
                             count = p.search(page['href']).group(1)
                         except:
                             weiboMain.log.error('++++Can not get page count! <@WBUserParser.get_page_count>++++')
+                            continue
                         
-        #print 'follow page count: ' + count
+        #print 'follow page count: ' + str(count)
         self.page_count = int(count)
         return self.page_count
 
@@ -294,9 +306,11 @@ class WBUserParser():
         weiboMain.log.info('>>>>page ' + str(page))
         follow_url = self.url + url +  '&page=' + str(page)
         try:
-            res = urllib2.urlopen(follow_url)
-        except:
-            weiboMain.log.error('++++Open url [%s] failed. <@parser.get_list>++++' % follow_url)
+            req = urllib2.Request(follow_url)
+            req.add_header('User-Agent', self.headers)
+            res = urllib2.urlopen(req)
+        except urllib2.HTTPError, e:
+            weiboMain.log.error('++++Open url [%s] failed. (Error code: %d) <@parser.get_list>++++' % (follow_url, e.code))
             return 0
         soup = beautiful_soup(res.read())
 
